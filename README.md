@@ -1,14 +1,14 @@
 
-<p align="center">
+# Homebridge Platform Plugin for Raritan PDUs
 
-<img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
+<span align="center">
 
-</p>
+### This Platform is currently in development, and is not yet complete!
+
+</span>
 
 
-# Homebridge Platform Plugin Template
-
-This is a template Homebridge platform plugin and can be used as a base to help you get started developing your own plugin.
+This is a Homebridge platform plugin for Raritan PDUs.  It creates an accessory for each PDU, having a number of Outlet services and a Lightmeter service to report on current power utilization in Watts.
 
 This template should be use in conjunction with the [developer documentation](https://developers.homebridge.io/). A full list of all supported service types, and their characteristics is available on this site.
 

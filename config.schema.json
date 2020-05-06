@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "Raritan PDU",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,7 +9,19 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "LAB PDU"
+      },
+      "ipAddress": {
+        "title": "Ip Address",
+        "type": "string",
+        "required": true,
+        "default": "192.168.1.70"
+      },
+      "snmpCommunity": {
+        "title": "SNMP Write Community",
+        "type": "string",
+        "required": true,
+        "default": "homelan"
       }
     }
   }

@@ -1,16 +1,16 @@
 {
   "private": true,
   "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
-  "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "name": "homebridge-platform-raritanpdu",
+  "version": "0.0.1",
+  "description": "A Homebridge plugin for Raritan PDUs.",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/ecoen66/homebridge-platform-raritanpdu.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/ecoen66/homebridge-platform-raritanpdu/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -26,7 +26,10 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "es6-promisify": ">=4.0",
+    "net-snmp": "^1.1.18"
+  },
   "devDependencies": {
     "@types/node": "^13.13.4",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
