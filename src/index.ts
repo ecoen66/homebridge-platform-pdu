@@ -1,11 +1,11 @@
 import type { API } from 'homebridge';
 
-import { PLATFORM_NAME } from './settings';
+import { PLUGIN_NAME, PLATFORM_NAME } from './settings';
 import { RaritanHomebridgePlatform } from './platform'; 
 
 /**
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, RaritanHomebridgePlatform);
+  api.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, RaritanHomebridgePlatform, true);
 }

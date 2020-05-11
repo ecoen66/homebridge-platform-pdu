@@ -1,14 +1,18 @@
 import { APIEvent } from 'homebridge';
-import type { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
+import type { API, Service, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RaritanPlatformAccessory } from './platformAccessory';
 
+const {promisify} = require("es6-promisify");
+const snmp = require("net-snmp");
+
 const count_oid = "1.3.6.1.4.1.13742.4.1.2.1.0";
-const mfr_oid = "1.3.6.1.4.1.13742.4.1.1.13.0";
+const name_oid = "1.3.6.1.2.1.1.5.0";
 const model_oid = "1.3.6.1.4.1.13742.4.1.1.12.0";
 const serial_oid = "1.3.6.1.4.1.13742.4.1.1.2.0";
 const firmware_oid = "1.3.6.1.4.1.13742.4.1.1.1.0";
+const characteristics_oids = [count_oid,name_oid,model_oid,serial_oid,firmware_oid];
 
 /**
  * HomebridgePlatform
@@ -21,11 +25,14 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+  private snmp_session: any;
+  private snmp_get: any;
 
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
     public readonly api: API,
+
   ) {
     this.log.debug('Finished initializing platform:', this.config.name);
 
@@ -53,6 +60,7 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
     this.accessories.push(accessory);
+  
   }
 
   /**
@@ -65,73 +73,79 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.
-    const exampleDevices = [
+    var exampleDevices = [
       {
+				name: 'Lab Platform PDU',
         ipAddress: '192.168.1.70',
-        snmpCommunity: 'homelan'
-        displayName: 'Lab PDU',
-        manufacturer: '',
+        snmpCommunity: 'homelan',
+        displayName: 'Lab Platform PDU',
+        manufacturer: 'Raritan',
         model: '',
         firmware: '',
-        serial: '',
-        count:'',
+        serial: '123',
+        count:'24',
       },
     ];
-
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
     
-      this.snmp = snmp.createSession(device.ipAddress, device.snmpCommunity);
-      this.snmp_get = promisify(this.snmp.get.bind(this.snmp));
-      this.snmp_get(characteristics_oids)
-        .then(varbinds => {
+    interface varbind_type {
+      oid: string;
+      type: any;
+      value: any
+    };
+    
+    // loop over the discovered devices and register each one if it has not already been registered
+    for (const device of this.config.pdus) {    
+      this.snmp_session = snmp.createSession(device.ipAddress, device.snmpCommunity);
+      this.snmp_get = promisify(this.snmp_session.get.bind(this.snmp_session));
+			this.snmp_get(characteristics_oids)
+				.then((varbinds: varbind_type[]) => {
           device.count = varbinds[0].value;
-          device.manufacturer = varbinds[1].value;
-          device.model = varbinds[2].value;
-          device.serial = varbinds[3].value;
-          device.firmware = varbinds[4].value;
-          this.log.info(`There are ${device.count} outlets.`);
-          this.log.info(`PDU manufacturer ${device.manufacturer}.`);
-          this.log.info(`PDU model number ${device.model}.`);
-          this.log.info(`PDU serial number ${device.serial}.`);
-          this.log.info(`PDU firmware version ${device.firmware}.`);
+          device.displayName = varbinds[1].value.toString();
+          device.model = varbinds[2].value.toString();
+          device.serial = varbinds[3].value.toString();
+          device.firmware = varbinds[4].value.toString();
+          device.manufacturer = "Raritan";
+          this.log.debug(`There are ${device.count} outlets.`);
+          this.log.debug(`PDU name ${device.displayName}.`);
+          this.log.debug(`PDU model number ${device.model}.`);
+          this.log.debug(`PDU serial number ${device.serial}.`);
+          this.log.debug(`PDU firmware version ${device.firmware}.`);
+					this.snmp_session.close();
+
+					// generate a unique id for the accessory this should be generated from
+					// something globally unique, but constant, for example, the device serial
+					// number or MAC address
+					const uuid = this.api.hap.uuid.generate(device.serial);
+
+					// check that the device has not already been registered by checking the
+					// cached devices we stored in the `configureAccessory` method above
+					if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
+						this.log.info('Registering new accessory:', device.displayName);
+
+						// create a new accessory
+						const accessory = new this.api.platformAccessory(device.displayName, uuid);
+
+						// store a copy of the device object in the `accessory.context`
+						// the `context` property can be used to store any data about the accessory you may need
+						accessory.context.device = device;
+
+						// create the accessory handler
+						// this is imported from `platformAccessory.ts`
+						new RaritanPlatformAccessory(this, accessory);
+
+						// link the accessory to your platform
+						this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+
+						// push into accessory cache
+						this.accessories.push(accessory);
+
+						// it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+						// this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+					}
         })
-        .catch(error => {
-          this.log.error(error.stack);
+        .catch((err: Error) => {
+          this.log.error('We hit an error trying to GET Characteristics OIDs')
         });
-      this.snmp.close();
-
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.serial);
-
-      // check that the device has not already been registered by checking the
-      // cached devices we stored in the `configureAccessory` method above
-      if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
-        this.log.info('Registering new accessory:', device.displayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.displayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler
-        // this is imported from `platformAccessory.ts`
-        new RaritanPlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-
-        // push into accessory cache
-        this.accessories.push(accessory);
-
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
     }
-
   }
 }
