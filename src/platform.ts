@@ -4,15 +4,15 @@ import type { API, Service, Characteristic, DynamicPlatformPlugin, Logger, Platf
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RaritanPlatformAccessory } from './platformAccessory';
 
-const {promisify} = require("es6-promisify");
-const snmp = require("net-snmp");
+import * as {promisify} from 'es6-promisify';
+import * as snmp from 'net-snmp';
 
-const count_oid = "1.3.6.1.4.1.13742.4.1.2.1.0";
-const name_oid = "1.3.6.1.2.1.1.5.0";
-const model_oid = "1.3.6.1.4.1.13742.4.1.1.12.0";
-const serial_oid = "1.3.6.1.4.1.13742.4.1.1.2.0";
-const firmware_oid = "1.3.6.1.4.1.13742.4.1.1.1.0";
-const characteristics_oids = [count_oid,name_oid,model_oid,serial_oid,firmware_oid];
+const countOid = '1.3.6.1.4.1.13742.4.1.2.1.0';
+const nameOid = '1.3.6.1.2.1.1.5.0';
+const modelOid = '1.3.6.1.4.1.13742.4.1.1.12.0';
+const serialOid = '1.3.6.1.4.1.13742.4.1.1.2.0';
+const firmwareOid = '1.3.6.1.4.1.13742.4.1.1.1.0';
+const characteristicsOids = [countOid,nameOid,modelOid,serialOid,firmwareOid];
 
 /**
  * HomebridgePlatform
@@ -25,8 +25,8 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
-  private snmp_session: any;
-  private snmp_get: any;
+  private snmpSession: any;
+  private snmpGet: any;
 
   constructor(
     public readonly log: Logger,
@@ -73,7 +73,7 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.
-    var exampleDevices = [
+    /*    const exampleDevices = [
       {
 				name: 'Lab Platform PDU',
         ipAddress: '192.168.1.70',
@@ -86,65 +86,65 @@ export class RaritanHomebridgePlatform implements DynamicPlatformPlugin {
         count:'24',
       },
     ];
-    
-    interface varbind_type {
+*/    
+    interface VarbindType {
       oid: string;
       type: any;
-      value: any
-    };
+      value: any;
+    }
     
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of this.config.pdus) {    
-      this.snmp_session = snmp.createSession(device.ipAddress, device.snmpCommunity);
-      this.snmp_get = promisify(this.snmp_session.get.bind(this.snmp_session));
-			this.snmp_get(characteristics_oids)
-				.then((varbinds: varbind_type[]) => {
+      this.snmpSession = snmp.createSession(device.ipAddress, device.snmpCommunity);
+      this.snmpGet = promisify(this.snmpSession.get.bind(this.snmpSession));
+      this.snmpGet(characteristicsOids)
+        .then((varbinds: VarbindType[]) => {
           device.count = varbinds[0].value;
           device.displayName = varbinds[1].value.toString();
           device.model = varbinds[2].value.toString();
           device.serial = varbinds[3].value.toString();
           device.firmware = varbinds[4].value.toString();
-          device.manufacturer = "Raritan";
+          device.manufacturer = 'Raritan';
           this.log.debug(`There are ${device.count} outlets.`);
           this.log.debug(`PDU name ${device.displayName}.`);
           this.log.debug(`PDU model number ${device.model}.`);
           this.log.debug(`PDU serial number ${device.serial}.`);
           this.log.debug(`PDU firmware version ${device.firmware}.`);
-					this.snmp_session.close();
+          this.snmpSession.close();
 
-					// generate a unique id for the accessory this should be generated from
-					// something globally unique, but constant, for example, the device serial
-					// number or MAC address
-					const uuid = this.api.hap.uuid.generate(device.serial);
+          // generate a unique id for the accessory this should be generated from
+          // something globally unique, but constant, for example, the device serial
+          // number or MAC address
+          const uuid = this.api.hap.uuid.generate(device.serial);
 
-					// check that the device has not already been registered by checking the
-					// cached devices we stored in the `configureAccessory` method above
-					if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
-						this.log.info('Registering new accessory:', device.displayName);
+          // check that the device has not already been registered by checking the
+          // cached devices we stored in the `configureAccessory` method above
+          if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
+            this.log.info('Registering new accessory:', device.displayName);
 
-						// create a new accessory
-						const accessory = new this.api.platformAccessory(device.displayName, uuid);
+            // create a new accessory
+            const accessory = new this.api.platformAccessory(device.displayName, uuid);
 
-						// store a copy of the device object in the `accessory.context`
-						// the `context` property can be used to store any data about the accessory you may need
-						accessory.context.device = device;
+            // store a copy of the device object in the `accessory.context`
+            // the `context` property can be used to store any data about the accessory you may need
+            accessory.context.device = device;
 
-						// create the accessory handler
-						// this is imported from `platformAccessory.ts`
-						new RaritanPlatformAccessory(this, accessory);
+            // create the accessory handler
+            // this is imported from `platformAccessory.ts`
+            new RaritanPlatformAccessory(this, accessory);
 
-						// link the accessory to your platform
-						this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            // link the accessory to your platform
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
 
-						// push into accessory cache
-						this.accessories.push(accessory);
+            // push into accessory cache
+            this.accessories.push(accessory);
 
-						// it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-						// this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-					}
+            // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+            // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          }
         })
         .catch((err: Error) => {
-          this.log.error('We hit an error trying to GET Characteristics OIDs')
+          this.log.error('We hit an error trying to GET Characteristics OIDs');
         });
     }
   }
