@@ -4,7 +4,7 @@ import type { API, Service, Characteristic, DynamicPlatformPlugin, Logger, Platf
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { RaritanPlatformAccessory } from './platformAccessory';
 
-import * as {promisify} from 'es6-promisify';
+import{promisify} from 'es6-promisify';
 import * as snmp from 'net-snmp';
 
 const countOid = '1.3.6.1.4.1.13742.4.1.2.1.0';
