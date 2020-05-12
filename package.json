@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "Raritan Platform PDU",
   "name": "homebridge-platform-raritanpdu",
   "version": "0.0.2",
