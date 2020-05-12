@@ -2,7 +2,7 @@ import { Service, CharacteristicEventTypes } from 'homebridge';
 import type { PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback} from 'homebridge';
 
 import { RaritanHomebridgePlatform } from './platform';
-import * as {promisify} from 'es6-promisify';
+import {promisify} from 'es6-promisify';
 import * as snmp from 'net-snmp';
 
 /**
