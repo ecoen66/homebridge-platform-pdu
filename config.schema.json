@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "Raritan Platform PDU",
+  "pluginAlias": "Platform PDU",
   "pluginType": "platform",
   "schema": {
 		"name": {
@@ -11,7 +11,7 @@
 		"pdus": {
 			"type": "array",
 			"items": {
-			  "title": "Raritan PDU config",
+			  "title": "PDU config",
         "type": "object",
 				"properties": {
 					"ipAddress": {

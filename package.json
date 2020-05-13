@@ -1,16 +1,16 @@
 {
   "private": false,
-  "displayName": "Raritan Platform PDU",
-  "name": "homebridge-platform-raritanpdu",
+  "displayName": "Platform PDU",
+  "name": "homebridge-platform-pdu",
   "version": "0.0.3",
-  "description": "A Homebridge plugin for Raritan PDUs.",
+  "description": "A Homebridge plugin for Raritan and APC PDUs.",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ecoen66/homebridge-platform-raritanpdu.git"
+    "url": "git://github.com/ecoen66/homebridge-platform-pdu.git"
   },
   "bugs": {
-    "url": "https://github.com/ecoen66/homebridge-platform-raritanpdu/issues"
+    "url": "https://github.com/ecoen66/homebridge-platform-pdu/issues"
   },
   "engines": {
     "node": ">=10.17.0",

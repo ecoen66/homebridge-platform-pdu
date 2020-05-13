@@ -1,16 +1,35 @@
 import { Service, CharacteristicEventTypes } from 'homebridge';
 import type { PlatformAccessory, CharacteristicValue, CharacteristicSetCallback, CharacteristicGetCallback} from 'homebridge';
 
-import { RaritanHomebridgePlatform } from './platform';
+import { PduHomebridgePlatform } from './platform';
 import {promisify} from 'es6-promisify';
 import * as snmp from 'net-snmp';
+
+const raritanOutletNamesOid = '1.3.6.1.4.1.13742.4.1.2.2.1.2'
+const raritanOutletStatusOid = '1.3.6.1.4.1.13742.4.1.2.2.1.3'
+const raritanPowerOid = '1.3.6.1.4.1.13742.4.1.3.1.3.0'
+const raritanPowerMultiple = 1
+const raritanOff = 0
+const raritanOn = 1
+const apcOutletNamesOid = '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2'
+const apcOutletStatusOid = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
+const apcPowerOid = '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1'
+const apcPowerMultiple = 11 // Convert tenths of Amps to Watts at 110V AC
+const apcOff = 2
+const apcOn = 1
+const outletNameOids = [raritanOutletNamesOid,apcOutletNamesOid]
+const outletStatusOids = [raritanOutletStatusOid,apcOutletStatusOid]
+const powerOids = [raritanPowerOid,apcPowerOid]
+const powerMultiples = [raritanPowerMultiple,apcPowerMultiple]
+const statusOff = [raritanOff,apcOff]
+const statusOn = [raritanOn,apcOn]
 
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
  * Each accessory may expose multiple services of different service types.
  */
-export class RaritanPlatformAccessory {
+export class PduPlatformAccessory {
 //private service: Service;
   private services: Service[] =[];
 
@@ -29,7 +48,7 @@ export class RaritanPlatformAccessory {
   }
 */
   constructor(
-    private readonly platform: RaritanHomebridgePlatform,
+    private readonly platform: PduHomebridgePlatform,
     private readonly accessory: PlatformAccessory,
   ){
 
@@ -42,7 +61,7 @@ export class RaritanPlatformAccessory {
 
     for (let i = 0; i < this.accessory.context.device.count; i++) {
       const serviceName = `Outlet ${i}`;
-      this.platform.log.debug('serviceName for', i, serviceName);
+      this.platform.log.debug(this.accessory.context.device.displayName, 'serviceName for', i, serviceName);
       // get the LightBulb service if it exists, otherwise create a new LightBulb service
       // you can create multiple services for each accessory
       const iString = i.toString();
@@ -70,9 +89,10 @@ export class RaritanPlatformAccessory {
 
     const outletOids = [];
     for (let i = 0; i < this.accessory.context.device.count; i++) {
-      outletOids.push(`1.3.6.1.4.1.13742.4.1.2.2.1.2.${i + 1}`);
+			
+      outletOids.push(`${outletNameOids[this.accessory.context.device.mfgIndex]}.${i + 1}`);
     }
-    this.platform.log.debug('Outlet OIDs for names', outletOids);
+    this.platform.log.debug(this.accessory.context.device.displayName, 'Outlet OIDs for names', outletOids);
 
     const promises = [];
     for (let i = 0; i < outletOids.length; i += 2) {
@@ -95,18 +115,18 @@ export class RaritanPlatformAccessory {
           .map((varbind: VarbindType) => {
             return varbind.value.toString().split(',')[0];
           });
-        this.platform.log.debug('names=', names);
+        this.platform.log.debug(this.accessory.context.device.displayName, 'names=', names);
         for (let i = 0; i < names.length; i++) {
           const name = names[i];
-          this.platform.log.debug(`names ${i} =`, name);
+          this.platform.log.debug(this.accessory.context.device.displayName, `names ${i} =`, name);
           const service: Service = this.services[i];
           service.displayName = name;
           service.setCharacteristic(this.platform.Characteristic.Name, name);
         }
-        this.platform.log.info('Successfully loaded outlet names: ', names.join(', '));
+        this.platform.log.info(this.accessory.context.device.displayName, 'Successfully loaded outlet names: ', names.join(', '));
       })
       .catch(error => {
-        this.platform.log.error(error.stack);
+        this.platform.log.error(this.accessory.context.device.displayName, error.stack);
       });
   }
 
@@ -133,9 +153,9 @@ export class RaritanPlatformAccessory {
 */
 
   async setOn(index: number, on: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.info(`Switching socket ${index} to ${on}.`);
-    const switchOid = `1.3.6.1.4.1.13742.4.1.2.2.1.3.${index + 1}`;
-    const toggle = on ? 1 : 0;
+    this.platform.log.info(this.accessory.context.device.displayName, `Switching socket ${index} to ${on}.`);
+    const switchOid = `${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`;
+    const toggle = on ? statusOn[this.accessory.context.device.mfgIndex] : statusOff[this.accessory.context.device.mfgIndex];
     const snmpParms = [
       {
         oid: switchOid,
@@ -145,33 +165,33 @@ export class RaritanPlatformAccessory {
     ];
     this.snmpSet(snmpParms)
       .then(() => {
-        this.platform.log.info(`Successfully switched socket ${index} to ${on}.`);
+        this.platform.log.info(this.accessory.context.device.displayName, `Successfully switched socket ${index} to ${on}.`);
         callback(undefined);
       })
       .catch((err: Error) => {
-        this.platform.log.error(`Error switching socket ${index} to ${on}.`);
+        this.platform.log.error(this.accessory.context.device.displayName, `Error switching socket ${index} to ${on}.`);
         callback(err);
 
       });
   }
 
   async getOn(index: number, callback: CharacteristicSetCallback) {
-    this.platform.log.info(`Retrieving socket ${index}.`);
+    this.platform.log.info(this.accessory.context.device.displayName, `Retrieving socket ${index}.`);
     interface VarbindType {
       oid: string;
       type: any;
       value: any;
     }
     const switchOids = [];
-    switchOids.push(`1.3.6.1.4.1.13742.4.1.2.2.1.3.${index + 1}`);
+    switchOids.push(`${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
-        const on = varbinds[0].value === 1;
-        this.platform.log.info(`Socket ${index} is ${on}.`);
+        const on = varbinds[0].value === statusOn[this.accessory.context.device.mfgIndex];      	
+        this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
         callback(undefined, on);
       })
       .catch((err: Error) => {
-        this.platform.log.error(`Error retrieving socket ${index} status.`);
+        this.platform.log.error(this.accessory.context.device.displayName, `Error retrieving socket ${index} status.`);
         callback(err, undefined);
 
       });
@@ -184,15 +204,15 @@ export class RaritanPlatformAccessory {
       value: any;
     }
     const switchOids = [];
-    switchOids.push('1.3.6.1.4.1.13742.4.1.3.1.3.0');
+    switchOids.push(`${powerOids[this.accessory.context.device.mfgIndex]}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
-        const watts = varbinds[0].value;
-        this.platform.log.info('Calling getWatts', watts);
+        let watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex];
+        this.platform.log.info(this.accessory.context.device.displayName, 'Calling getWatts', watts);
         callback(undefined, watts);
       })
       .catch((err: Error) => {
-        this.platform.log.error('Error retrieving Watts.');
+        this.platform.log.error(this.accessory.context.device.displayName, 'Error retrieving Watts.');
         callback(err, undefined);
 
       });

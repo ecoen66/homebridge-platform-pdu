@@ -1,6 +1,6 @@
-# homebridge-platform-raritanpdu
-# Homebridge dynamic Platform Plugin for Raritan PDUs
-A [Raritan](https://www.raritan.com) PX-5475 PDU plugin for
+# homebridge-platform-pdu
+# Homebridge dynamic Platform Plugin for Raritan and APC PDUs
+A [Raritan](https://www.raritan.com) PX-5475 and [APC](https://www.apc.com) AP7931 PDU plugin for
 [Homebridge](https://github.com/nfarina/homebridge).  This creates one or more PDU accessories, each with multiple outlet services and a light meter service to report on current utilization in Watts.
 
 This code is heavily based on the work of invliD's [homebridge-digipower-pdu](https://github.com/invliD/homebridge-digipower-pdu) accessory.
@@ -34,7 +34,7 @@ Example platform config (needs to be added to the homebridge config.json):
                     "snmpCommunity": "private"
                 },
                 {
-                    "ipAddress": "192.168.1.80",
+                    "ipAddress": "192.168.1.75",
                     "snmpCommunity": "private"
                 }
                 
@@ -55,6 +55,6 @@ Field           						| Description
 
 # Supported Agents
 The only tested Raritan PDU model for this plugin is the one that I have in my lab, the PX-5475, but others should work.
-This is accomplished using the [PX-PDU-MIB](https://d3b2us605ptvk2.cloudfront.net/download/PX/v1.5.13/PX-1.5.13-MIB.txt).
+This is accomplished using the [PX-PDU-MIB](https://d3b2us605ptvk2.cloudfront.net/download/PX/v1.5.13/PX-1.5.13-MIB.txt) & [APC PowerNet MIB v4.0.4](https://www.apc.com/shop/us/en/products/APC-PowerNet-MIB-v4-0-4/P-SFPMIB404).
 
 The outlet count is grabbed from the PDU using SNMP, as are the Model, FirmwareRevision, SerialNumber & SNMP system name (used as a DisplayName).
