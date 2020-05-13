@@ -48,7 +48,7 @@ Example platform config (needs to be added to the homebridge config.json):
 
 Field           						| Description
 ----------------------------|------------
-**platform**   							| (required) Must always be "Raritan PDU".
+**platform**   							| (required) Must always be "Platform PDU".
 **name**										| (required) A name for HomeBridge to use to reference the platform.
 **ip_address**  						| (required) The internal ip address of your PDU.
 **snmp_community**  				| (required) The Write community string for your PDU.
