@@ -2,16 +2,14 @@
   "private": false,
   "displayName": "Platform PDU",
   "name": "homebridge-platform-pdu",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A Homebridge plugin for Raritan and APC PDUs.",
   "license": "ISC",
-  	"keywords": [
+	"keywords": [
 		"homebridge-plugin",
 		"Raritan",
-		"APC",
 		"PDU"
 	],
-
   "repository": {
     "type": "git",
     "url": "git://github.com/ecoen66/homebridge-platform-pdu.git"
@@ -30,9 +28,6 @@
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
   },
-  "keywords": [
-    "homebridge-plugin"
-  ],
   "dependencies": {
     "es6-promisify": ">=4.0",
     "net-snmp": "^1.1.18"
