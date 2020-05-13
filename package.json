@@ -5,6 +5,13 @@
   "version": "0.0.3",
   "description": "A Homebridge plugin for Raritan and APC PDUs.",
   "license": "ISC",
+  	"keywords": [
+		"homebridge-plugin",
+		"Raritan",
+		"APC",
+		"PDU"
+	],
+
   "repository": {
     "type": "git",
     "url": "git://github.com/ecoen66/homebridge-platform-pdu.git"
