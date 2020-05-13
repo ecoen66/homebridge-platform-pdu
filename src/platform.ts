@@ -89,77 +89,77 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
       const snmpGet = promisify(snmpSession.get.bind(snmpSession));
       snmpGet(sysDescrOid)
         .then((mfgVarbinds: VarbindType[]) => {
-          this.log.debug('Manufacturer varbind returned', mfgVarbinds[0].value.toString())
-          device.manufacturer = mfgVarbinds[0].value.toString().split(" ",1)[0];
+          this.log.debug('Manufacturer varbind returned', mfgVarbinds[0].value.toString());
+          device.manufacturer = mfgVarbinds[0].value.toString().split(' ',1)[0];
           this.log.debug('device.manufacturer = ', device.manufacturer);
           const mfgIndex = knownManufacturers.indexOf(device.manufacturer);
 					
-				  if (mfgIndex > -1) {
-          	device.mfgIndex = mfgIndex;
-						snmpGet(characteristicsOids[mfgIndex])
-							.then((varbinds: VarbindType[]) => {
-								device.count = varbinds[0].value;
-								device.displayName = varbinds[1].value.toString();
-								device.model = varbinds[2].value.toString();
-								device.serial = varbinds[3].value.toString();
-								device.firmware = varbinds[4].value.toString();
-								this.log.debug(`There are ${device.count} outlets.`);
-								this.log.debug(`PDU name ${device.displayName}.`);
-								this.log.debug(`PDU model number ${device.model}.`);
-								this.log.debug(`PDU serial number ${device.serial}.`);
-								this.log.debug(`PDU firmware version ${device.firmware}.`);
-								snmpSession.close();
+          if (mfgIndex > -1) {
+            device.mfgIndex = mfgIndex;
+            snmpGet(characteristicsOids[mfgIndex])
+              .then((varbinds: VarbindType[]) => {
+                device.count = varbinds[0].value;
+                device.displayName = varbinds[1].value.toString();
+                device.model = varbinds[2].value.toString();
+                device.serial = varbinds[3].value.toString();
+                device.firmware = varbinds[4].value.toString();
+                this.log.debug(`There are ${device.count} outlets.`);
+                this.log.debug(`PDU name ${device.displayName}.`);
+                this.log.debug(`PDU model number ${device.model}.`);
+                this.log.debug(`PDU serial number ${device.serial}.`);
+                this.log.debug(`PDU firmware version ${device.firmware}.`);
+                snmpSession.close();
 
-								// generate a unique id for the accessory this should be generated from
-								// something globally unique, but constant, for example, the device serial
-								// number or MAC address
-								const uuid = this.api.hap.uuid.generate(device.serial);
+                // generate a unique id for the accessory this should be generated from
+                // something globally unique, but constant, for example, the device serial
+                // number or MAC address
+                const uuid = this.api.hap.uuid.generate(device.serial);
 
-								// check that the device has not already been registered by checking the
-								// cached devices we stored in the `configureAccessory` method above
-								if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
-									this.log.info('Registering new accessory:', device.displayName);
+                // check that the device has not already been registered by checking the
+                // cached devices we stored in the `configureAccessory` method above
+                if (!this.accessories.find(accessory => accessory.UUID === uuid)) {
+                  this.log.info('Registering new accessory:', device.displayName);
 
-									// create a new accessory
-									const accessory = new this.api.platformAccessory(device.displayName, uuid);
+                  // create a new accessory
+                  const accessory = new this.api.platformAccessory(device.displayName, uuid);
 
-									// store a copy of the device object in the `accessory.context`
-									// the `context` property can be used to store any data about the accessory you may need
-									accessory.context.device = device;
+                  // store a copy of the device object in the `accessory.context`
+                  // the `context` property can be used to store any data about the accessory you may need
+                  accessory.context.device = device;
 
-									// create the accessory handler
-									// this is imported from `platformAccessory.ts`
-									new PduPlatformAccessory(this, accessory);
+                  // create the accessory handler
+                  // this is imported from `platformAccessory.ts`
+                  new PduPlatformAccessory(this, accessory);
 
-									// link the accessory to your platform
-									this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+                  // link the accessory to your platform
+                  this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
 
-									// push into accessory cache
-									this.accessories.push(accessory);
+                  // push into accessory cache
+                  this.accessories.push(accessory);
 
-									// it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-									// this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-								}
-							})
-							.catch((err: Error) => {
-								this.log.error('We hit an error trying to GET Characteristics OIDs');
-								console.log(err.stack);
-								snmpSession.close();
+                  // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+                  // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+                }
+              })
+              .catch((err: Error) => {
+                this.log.error('We hit an error trying to GET Characteristics OIDs');
+                console.log(err.stack);
+                snmpSession.close();
 							
 
-							})
-						} else {
-							this.log.error('Unknown PDU manufacturer',device.manufacturer);
-							snmpSession.close();
+              })
+            } else {
+              this.log.error('Unknown PDU manufacturer',device.manufacturer);
+              snmpSession.close();
 
-						}
-					})
-					.catch((err: Error) => {
-						this.log.error('We hit an error trying to GET Manufacturer OID');
-						console.log(err.stack);
-						snmpSession.close();
+            }
+          })
+          .catch((err: Error) => {
+            this.log.error('We hit an error trying to GET Manufacturer OID');
+            console.log(err.stack);
+            snmpSession.close();
 
-					});		
+          });		
     }
   }
 }

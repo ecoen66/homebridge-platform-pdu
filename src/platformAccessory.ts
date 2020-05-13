@@ -5,24 +5,24 @@ import { PduHomebridgePlatform } from './platform';
 import {promisify} from 'es6-promisify';
 import * as snmp from 'net-snmp';
 
-const raritanOutletNamesOid = '1.3.6.1.4.1.13742.4.1.2.2.1.2'
-const raritanOutletStatusOid = '1.3.6.1.4.1.13742.4.1.2.2.1.3'
-const raritanPowerOid = '1.3.6.1.4.1.13742.4.1.3.1.3.0'
-const raritanPowerMultiple = 1
-const raritanOff = 0
-const raritanOn = 1
-const apcOutletNamesOid = '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2'
-const apcOutletStatusOid = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
-const apcPowerOid = '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1'
-const apcPowerMultiple = 11 // Convert tenths of Amps to Watts at 110V AC
-const apcOff = 2
-const apcOn = 1
-const outletNameOids = [raritanOutletNamesOid,apcOutletNamesOid]
-const outletStatusOids = [raritanOutletStatusOid,apcOutletStatusOid]
-const powerOids = [raritanPowerOid,apcPowerOid]
-const powerMultiples = [raritanPowerMultiple,apcPowerMultiple]
-const statusOff = [raritanOff,apcOff]
-const statusOn = [raritanOn,apcOn]
+const raritanOutletNamesOid = '1.3.6.1.4.1.13742.4.1.2.2.1.2';
+const raritanOutletStatusOid = '1.3.6.1.4.1.13742.4.1.2.2.1.3';
+const raritanPowerOid = '1.3.6.1.4.1.13742.4.1.3.1.3.0';
+const raritanPowerMultiple = 1;
+const raritanOff = 0;
+const raritanOn = 1;
+const apcOutletNamesOid = '1.3.6.1.4.1.318.1.1.12.3.5.1.1.2';
+const apcOutletStatusOid = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4';
+const apcPowerOid = '1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1';
+const apcPowerMultiple = 11; // Convert tenths of Amps to Watts at 110V AC
+const apcOff = 2;
+const apcOn = 1;
+const outletNameOids = [raritanOutletNamesOid,apcOutletNamesOid];
+const outletStatusOids = [raritanOutletStatusOid,apcOutletStatusOid];
+const powerOids = [raritanPowerOid,apcPowerOid];
+const powerMultiples = [raritanPowerMultiple,apcPowerMultiple];
+const statusOff = [raritanOff,apcOff];
+const statusOn = [raritanOn,apcOn];
 
 /**
  * Platform Accessory
@@ -207,7 +207,7 @@ export class PduPlatformAccessory {
     switchOids.push(`${powerOids[this.accessory.context.device.mfgIndex]}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
-        let watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex];
+        const watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex];
         this.platform.log.info(this.accessory.context.device.displayName, 'Calling getWatts', watts);
         callback(undefined, watts);
       })
