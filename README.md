@@ -55,6 +55,7 @@ Field           						| Description
 
 # Supported Agents
 The only tested Raritan PDU model for this plugin is the one that I have in my lab, the PX-5475, but others should work.
+The only tested APC PDU model for this plugin is the one that I have in my lab, the AP7931.
 This is accomplished using the [PX-PDU-MIB](https://d3b2us605ptvk2.cloudfront.net/download/PX/v1.5.13/PX-1.5.13-MIB.txt) & [APC PowerNet MIB v4.0.4](https://www.apc.com/shop/us/en/products/APC-PowerNet-MIB-v4-0-4/P-SFPMIB404).
 
 The outlet count is grabbed from the PDU using SNMP, as are the Model, FirmwareRevision, SerialNumber & SNMP system name (used as a DisplayName).
