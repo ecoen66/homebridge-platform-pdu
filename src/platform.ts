@@ -42,13 +42,6 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
 
   ) {
-			if (!config) {
-        log.warn("Ignoring PDU Platform setup because it is not configured");
-        this.disabled = true;
-        return;
-      }
-
-    
       this.log.info('Finished initializing platform:', this.config.name);
 
       // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -56,7 +49,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
       // in order to ensure they weren't added to homebridge already. This event can also be used
       // to start discovery of new accessories.
       this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-        this.log.info('Executed didFinishLaunching callback');
+        this.log.debug('Executed didFinishLaunching callback');
         // run the method to discover / register your devices as accessories
         this.discoverDevices();
       });
@@ -67,7 +60,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
-    if (this.config.pdus.find( ({ ipAddress }) => ipAddress === accessory.context.device.ipAddress ))  {
+    if (this.config.pdus.find( (ipAddress: string) => ipAddress === accessory.context.device.ipAddress ))  {
 			this.log.info('Restoring accessory from cache:', accessory.displayName);
 
 			// create the accessory handler
@@ -90,6 +83,13 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
       type: any;
       value: any;
     }
+
+    // check for a blank config and return without registering accessories
+		if (!this.config) {
+			this.log.warn("Ignoring PDU Platform setup because it is not configured");
+			return;
+		}
+
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of this.config.pdus) {   
       const snmpSession = snmp.createSession(device.ipAddress, device.snmpCommunity);

@@ -178,9 +178,9 @@ export class PduPlatformAccessory {
       .then((varbinds: VarbindType[]) => {
         const on = varbinds[0].value === statusOn[this.accessory.context.device.mfgIndex]; 
         if (on) {     	
-        	this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+					this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
         } else {
-        	this.platform.log.debug(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+					this.platform.log.debug(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
 				}
         callback(undefined, on);
       })
