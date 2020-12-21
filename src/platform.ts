@@ -60,15 +60,21 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
-    if (this.config.pdus.find( (ipAddress: string) => ipAddress === accessory.context.device.ipAddress ))  {
-			this.log.info('Restoring accessory from cache:', accessory.displayName);
+    interface PduType {
+      ipAddress: string;
+      snmpCommunity: string;
+    }
+    if (this.config.pdus.find( (pdu: PduType) => pdu.ipAddress === accessory.context.device.ipAddress ))  {
+			if (!this.accessories.find( (anAccessory) => anAccessory.context.device.ipAddress === accessory.context.device.ipAddress ))  {
+				this.log.info('Restoring accessory from cache:', accessory.UUID, accessory.displayName);
 
-			// create the accessory handler
-			// this is imported from `platformAccessory.ts`
-			new PduPlatformAccessory(this, accessory);
+				// create the accessory handler
+				// this is imported from `platformAccessory.ts`
+				new PduPlatformAccessory(this, accessory);
 
-			// add the restored accessory to the accessories cache so we can track if it has already been registered
-			this.accessories.push(accessory);
+				// add the restored accessory to the accessories cache so we can track if it has already been registered
+				this.accessories.push(accessory);
+			}
     }
   }
 
