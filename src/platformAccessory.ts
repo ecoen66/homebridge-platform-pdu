@@ -37,16 +37,6 @@ export class PduPlatformAccessory {
   public snmpGet: any;
   public snmpSet: any;
 
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   * --- I may modify this later...
-   */
-  /*  private exampleStates = {
-    On: false,
-    Brightness: 100,
-  }
-*/
   constructor(
     private readonly platform: PduHomebridgePlatform,
     private readonly accessory: PlatformAccessory,
@@ -153,7 +143,7 @@ export class PduPlatformAccessory {
 */
 
   async setOn(index: number, on: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.info(this.accessory.context.device.displayName, `Switching socket ${index} to ${on}.`);
+    this.platform.log.debug(this.accessory.context.device.displayName, `Switching socket ${index} to ${on}.`);
     const switchOid = `${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`;
     const toggle = on ? statusOn[this.accessory.context.device.mfgIndex] : statusOff[this.accessory.context.device.mfgIndex];
     const snmpParms = [
@@ -176,7 +166,7 @@ export class PduPlatformAccessory {
   }
 
   async getOn(index: number, callback: CharacteristicSetCallback) {
-    this.platform.log.info(this.accessory.context.device.displayName, `Retrieving socket ${index}.`);
+    this.platform.log.debug(this.accessory.context.device.displayName, `Retrieving socket ${index}.`);
     interface VarbindType {
       oid: string;
       type: any;
@@ -186,8 +176,12 @@ export class PduPlatformAccessory {
     switchOids.push(`${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
-        const on = varbinds[0].value === statusOn[this.accessory.context.device.mfgIndex];      	
-        this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+        const on = varbinds[0].value === statusOn[this.accessory.context.device.mfgIndex]; 
+        if (on) {     	
+        	this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+        } else {
+        	this.platform.log.debug(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+				}
         callback(undefined, on);
       })
       .catch((err: Error) => {

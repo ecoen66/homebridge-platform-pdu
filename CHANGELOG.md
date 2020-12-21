@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.0.9 (2020-12-21)
+
+#### Changes
+
+- Minimized logging unless in homebridge debug mode.
+- Disabled the plugin if there is no config for it.
+- Updated dependency on net-snmp to allow for recent version.
+
+
 ## 0.0.8 (2020-05-15)
 
 #### Changes

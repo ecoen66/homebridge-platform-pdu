@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Platform PDU",
   "name": "homebridge-platform-pdu",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A Homebridge plugin for Raritan and APC PDUs.",
   "license": "ISC",
   "keywords": [
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "es6-promisify": ">=4.0",
-    "net-snmp": "^1.1.18"
+    "net-snmp": ">=1.1.18"
   },
   "devDependencies": {
     "@types/node": "^13.13.4",

@@ -42,17 +42,24 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
 
   ) {
-    this.log.info('Finished initializing platform:', this.config.name);
+			if (!config) {
+        log.warn("Ignoring PDU Platform setup because it is not configured");
+        this.disabled = true;
+        return;
+      }
 
-    // When this event is fired it means Homebridge has restored all cached accessories from disk.
-    // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren't added to homebridge already. This event can also be used
-    // to start discovery of new accessories.
-    this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-      this.log.info('Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      this.discoverDevices();
-    });
+    
+      this.log.info('Finished initializing platform:', this.config.name);
+
+      // When this event is fired it means Homebridge has restored all cached accessories from disk.
+      // Dynamic Platform plugins should only register new accessories after this event was fired,
+      // in order to ensure they weren't added to homebridge already. This event can also be used
+      // to start discovery of new accessories.
+      this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
+        this.log.info('Executed didFinishLaunching callback');
+        // run the method to discover / register your devices as accessories
+        this.discoverDevices();
+      });
   }
 
   /**
@@ -60,15 +67,16 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
-    this.log.info('Restoring accessory from cache:', accessory.displayName);
+    if (this.config.pdus.find( ({ ipAddress }) => ipAddress === accessory.context.device.ipAddress ))  {
+			this.log.info('Restoring accessory from cache:', accessory.displayName);
 
-    // create the accessory handler
-    // this is imported from `platformAccessory.ts`
-    new PduPlatformAccessory(this, accessory);
+			// create the accessory handler
+			// this is imported from `platformAccessory.ts`
+			new PduPlatformAccessory(this, accessory);
 
-    // add the restored accessory to the accessories cache so we can track if it has already been registered
-    this.accessories.push(accessory);
-  
+			// add the restored accessory to the accessories cache so we can track if it has already been registered
+			this.accessories.push(accessory);
+    }
   }
 
   /**
