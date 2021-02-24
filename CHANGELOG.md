@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.0 (2021-02-24)
+
+#### Changes
+
+- Adjusted reporting of 0 Watts of power draw to 0.0001 LUX per Homebridge 1.3.
+
 ## 0.0.9 (2020-12-21)
 
 #### Changes
@@ -9,7 +15,6 @@ All notable changes to this project will be documented in this file.
 - Minimized logging unless in homebridge debug mode.
 - Disabled the plugin if there is no config for it.
 - Updated dependency on net-snmp to allow for recent version.
-
 
 ## 0.0.8 (2020-05-15)
 

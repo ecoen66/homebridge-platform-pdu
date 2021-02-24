@@ -203,6 +203,7 @@ export class PduPlatformAccessory {
       .then((varbinds: VarbindType[]) => {
         const watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex];
         this.platform.log.info(this.accessory.context.device.displayName, 'Calling getWatts', watts);
+        if watts <= 0 { watts = 0.0001};
         callback(undefined, watts);
       })
       .catch((err: Error) => {

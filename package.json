@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Platform PDU",
   "name": "homebridge-platform-pdu",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "description": "A Homebridge plugin for Raritan and APC PDUs.",
   "license": "ISC",
   "keywords": [
