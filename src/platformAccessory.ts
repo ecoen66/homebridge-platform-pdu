@@ -201,9 +201,8 @@ export class PduPlatformAccessory {
     switchOids.push(`${powerOids[this.accessory.context.device.mfgIndex]}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
-        const watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex];
+        const watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex] ? varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex] : 0.0001;
         this.platform.log.info(this.accessory.context.device.displayName, 'Calling getWatts', watts);
-        if (watts <= 0) { watts = 0.0001}
         callback(undefined, watts);
       })
       .catch((err: Error) => {
