@@ -35,6 +35,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly accessories: PlatformAccessory[] = [];
   private snmpSession: any;
   private snmpGet: any;
+  public debugOn: boolean;
 
   constructor(
     public readonly log: Logger,
@@ -42,6 +43,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API,
 
   ) {
+      this.debugOn = this.config.debug ?? false;
       this.log.info('Finished initializing platform:', this.config.name);
 
       // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -49,7 +51,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
       // in order to ensure they weren't added to homebridge already. This event can also be used
       // to start discovery of new accessories.
       this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-        this.log.debug('Executed didFinishLaunching callback');
+        if (this.debugOn) { this.log.info('Executed didFinishLaunching callback'); }
         // run the method to discover / register your devices as accessories
         this.discoverDevices();
       });
@@ -99,13 +101,13 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of this.config.pdus) {   
       const snmpSession = snmp.createSession(device.ipAddress, device.snmpCommunity);
-      this.log.debug('Opened SNMP session.');
+      if (this.debugOn) { this.log.info('Opened SNMP session.'); }
       const snmpGet = promisify(snmpSession.get.bind(snmpSession));
       snmpGet(sysDescrOid)
         .then((mfgVarbinds: VarbindType[]) => {
-          this.log.debug('Manufacturer varbind returned', mfgVarbinds[0].value.toString());
+          if (this.debugOn) { this.log.info('Manufacturer varbind returned', mfgVarbinds[0].value.toString()); }
           device.manufacturer = mfgVarbinds[0].value.toString().split(' ',1)[0];
-          this.log.debug('device.manufacturer = ', device.manufacturer);
+          if (this.debugOn) { this.log.info('device.manufacturer = ', device.manufacturer); }
           const mfgIndex = knownManufacturers.indexOf(device.manufacturer);
 					
           if (mfgIndex > -1) {
@@ -117,11 +119,13 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
                 device.model = varbinds[2].value.toString();
                 device.serial = varbinds[3].value.toString();
                 device.firmware = varbinds[4].value.toString();
-                this.log.debug(`There are ${device.count} outlets.`);
-                this.log.debug(`PDU name ${device.displayName}.`);
-                this.log.debug(`PDU model number ${device.model}.`);
-                this.log.debug(`PDU serial number ${device.serial}.`);
-                this.log.debug(`PDU firmware version ${device.firmware}.`);
+                if (this.debugOn) {
+									this.log.info(`There are ${device.count} outlets.`);
+									this.log.info(`PDU name ${device.displayName}.`);
+									this.log.info(`PDU model number ${device.model}.`);
+									this.log.info(`PDU serial number ${device.serial}.`);
+									this.log.info(`PDU firmware version ${device.firmware}.`);
+                }
                 snmpSession.close();
 
                 // generate a unique id for the accessory this should be generated from

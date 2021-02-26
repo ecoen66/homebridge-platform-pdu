@@ -28,6 +28,7 @@ Example platform config (needs to be added to the homebridge config.json):
 		"platforms": [
         {
             "name": "LAB Platform PDU",
+            "debug": false;
             "pdus": [
                 {
                     "ipAddress": "192.168.1.70",
@@ -52,6 +53,7 @@ Field           						| Description
 **name**										| (required) A name for HomeBridge to use to reference the platform.
 **ip_address**  						| (required) The internal ip address of your PDU.
 **snmp_community**  				| (required) The Write community string for your PDU.
+**debug**  									| (optional) Enables additional logging from the platform for troubleshooting.
 
 # Supported Agents
 The only tested Raritan PDU model for this plugin is the one that I have in my lab, the PX-5475, but others should work.

@@ -51,7 +51,7 @@ export class PduPlatformAccessory {
 
     for (let i = 0; i < this.accessory.context.device.count; i++) {
       const serviceName = `Outlet ${i}`;
-      this.platform.log.debug(this.accessory.context.device.displayName, 'serviceName for', i, serviceName);
+      if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, 'serviceName for', i, serviceName); }
       // get the LightBulb service if it exists, otherwise create a new LightBulb service
       // you can create multiple services for each accessory
       const iString = i.toString();
@@ -82,7 +82,7 @@ export class PduPlatformAccessory {
 			
       outletOids.push(`${outletNameOids[this.accessory.context.device.mfgIndex]}.${i + 1}`);
     }
-    this.platform.log.debug(this.accessory.context.device.displayName, 'Outlet OIDs for names', outletOids);
+    if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, 'Outlet OIDs for names', outletOids); }
 
     const promises = [];
     for (let i = 0; i < outletOids.length; i += 2) {
@@ -105,10 +105,10 @@ export class PduPlatformAccessory {
           .map((varbind: VarbindType) => {
             return varbind.value.toString().split(',')[0];
           });
-        this.platform.log.debug(this.accessory.context.device.displayName, 'names=', names);
+        if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, 'names=', names); }
         for (let i = 0; i < names.length; i++) {
           const name = names[i];
-          this.platform.log.debug(this.accessory.context.device.displayName, `names ${i} =`, name);
+          if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `names ${i} =`, name); }
           const service: Service = this.services[i];
           service.displayName = name;
           service.setCharacteristic(this.platform.Characteristic.Name, name);
@@ -143,7 +143,7 @@ export class PduPlatformAccessory {
 */
 
   async setOn(index: number, on: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.platform.log.debug(this.accessory.context.device.displayName, `Switching socket ${index} to ${on}.`);
+    if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Switching socket ${index} to ${on}.`); }
     const switchOid = `${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`;
     const toggle = on ? statusOn[this.accessory.context.device.mfgIndex] : statusOff[this.accessory.context.device.mfgIndex];
     const snmpParms = [
@@ -166,7 +166,7 @@ export class PduPlatformAccessory {
   }
 
   async getOn(index: number, callback: CharacteristicSetCallback) {
-    this.platform.log.debug(this.accessory.context.device.displayName, `Retrieving socket ${index}.`);
+    if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Retrieving socket ${index}.`); }
     interface VarbindType {
       oid: string;
       type: any;
@@ -180,7 +180,7 @@ export class PduPlatformAccessory {
         if (on) {     	
 					this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
         } else {
-					this.platform.log.debug(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
+					if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`); }
 				}
         callback(undefined, on);
       })
