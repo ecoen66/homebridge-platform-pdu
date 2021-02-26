@@ -8,6 +8,12 @@
 			"required": true,
 			"default": "LAB Platform PDU"
 		},
+		"debug": {
+			"title": "Debug",
+			"type": "boolean",
+			"required": false,
+			"default": false
+		},
 		"pdus": {
 			"type": "array",
 			"items": {

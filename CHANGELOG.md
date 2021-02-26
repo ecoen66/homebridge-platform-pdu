@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.2 (2021-02-26)
+
+#### Changes
+
+- Added config boolean sto config.schema
+
 ## 0.1.1 (2021-02-26)
 
 #### Changes
