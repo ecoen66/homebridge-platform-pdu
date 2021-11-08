@@ -22,6 +22,7 @@ const apcFirmwareOid = '1.3.6.1.4.1.318.1.1.12.1.2.0';
 const knownManufacturers = ['Raritan', 'APC'];
 const characteristicsOids = [[raritanCountOid,raritanNameOid,raritanModelOid,raritanSerialOid,raritanFirmwareOid],[apcCountOid,apcNameOid,apcModelOid,apcSerialOid,apcFirmwareOid]];
 
+const interval = 15;
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
@@ -36,6 +37,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
   private snmpSession: any;
   private snmpGet: any;
   public debugOn: boolean;
+  public refreshInterval: number;
 
   constructor(
     public readonly log: Logger,
@@ -44,6 +46,7 @@ export class PduHomebridgePlatform implements DynamicPlatformPlugin {
 
   ) {
       this.debugOn = this.config.debug ?? false;
+			this.refreshInterval = this.config.refreshInterval === undefined ? (interval * 60000) : (this.config.refreshInterval * 60000);
       this.log.info('Finished initializing platform:', this.config.name);
 
       // When this event is fired it means Homebridge has restored all cached accessories from disk.

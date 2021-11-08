@@ -36,6 +36,7 @@ export class PduPlatformAccessory {
   public snmpSession: any;
   public snmpGet: any;
   public snmpSet: any;
+  public timer: any;
 
   constructor(
     private readonly platform: PduHomebridgePlatform,
@@ -65,17 +66,20 @@ export class PduPlatformAccessory {
       this.services.push(outletService);
       outletService.getCharacteristic(this.platform.Characteristic.On)
         .on(CharacteristicEventTypes.SET, this.setOn.bind(this, i))    // SET - bind to the `setOn` method below
-        .on(CharacteristicEventTypes.GET, this.getOn.bind(this, i));   // GET - bind to the `getOn` method below
+//        .on(CharacteristicEventTypes.GET, this.getOn.bind(this, i));   // GET - bind to the `getOn` method below
     }
 
     const lightService = this.accessory.getService(this.platform.Service.LightSensor) ?? this.accessory.addService(this.platform.Service.LightSensor, this.accessory.context.device.name);
     this.services.push(lightService);
-    lightService.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
-      .on(CharacteristicEventTypes.GET, this.getWatts.bind(this));
+//    lightService.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel)
+//      .on(CharacteristicEventTypes.GET, this.getWatts.bind(this));
 
     this.snmpSession = snmp.createSession(this.accessory.context.device.ipAddress, this.accessory.context.device.snmpCommunity);
     this.snmpGet = promisify(this.snmpSession.get.bind(this.snmpSession));
     this.snmpSet = promisify(this.snmpSession.set.bind(this.snmpSession));
+
+		this.timer = setTimeout(this.poll.bind(this), this.platform.refreshInterval)
+		this.poll()
 
     const outletOids = [];
     for (let i = 0; i < this.accessory.context.device.count; i++) {
@@ -155,6 +159,8 @@ export class PduPlatformAccessory {
     ];
     this.snmpSet(snmpParms)
       .then(() => {
+				const service: Service = this.services[index];
+				service.getCharacteristic(this.platform.Characteristic.On).updateValue(on);    		
         this.platform.log.info(this.accessory.context.device.displayName, `Successfully switched socket ${index} to ${on}.`);
         callback(undefined);
       })
@@ -165,51 +171,67 @@ export class PduPlatformAccessory {
       });
   }
 
-  async getOn(index: number, callback: CharacteristicSetCallback) {
-    if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Retrieving socket ${index}.`); }
+	async poll() {
+		if(this.timer) clearTimeout(this.timer)
+		this.timer = null
+
+		const outletOids = [];
+		for (let i = 0; i < this.accessory.context.device.count; i++)
+    {			
+      outletOids.push(`${outletStatusOids[this.accessory.context.device.mfgIndex]}.${i + 1}`);
+    }
+    if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, 'Outlet OIDs for status', outletOids); }
+
+    const promises = [];
+    for (let i = 0; i < outletOids.length; i += 2) {
+      const slice = outletOids.slice(i, i + 2);
+      promises.push(this.snmpGet(slice));
+    }
+
     interface VarbindType {
       oid: string;
       type: any;
       value: any;
     }
-    const switchOids = [];
-    switchOids.push(`${outletStatusOids[this.accessory.context.device.mfgIndex]}.${index + 1}`);
-    this.snmpGet(switchOids)
-      .then((varbinds: VarbindType[]) => {
-        const on = varbinds[0].value === statusOn[this.accessory.context.device.mfgIndex]; 
-        if (on) {     	
-					this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`);
-        } else {
-					if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Socket ${index} is ${on}.`); }
-				}
-        callback(undefined, on);
+    
+    Promise.all(promises)
+      .then(results => {
+        const states = results
+          .reduce((prev, current) => {
+            return prev.concat(current);
+          }, [])
+          .map((varbind: VarbindType) => {
+            return varbind.value.toString().split(',')[0];
+          });
+        if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, 'states=', states); }
+        for (let i = 0; i < states.length; i++) {
+          const on = Number(states[i])=== statusOn[this.accessory.context.device.mfgIndex]
+					if (on) {     	
+						this.platform.log.info(this.accessory.context.device.displayName, `Socket ${i} is ${on}.`);
+					} else {
+						if (this.platform.debugOn) { this.platform.log.info(this.accessory.context.device.displayName, `Socket ${i} is ${on}.`); }
+					}
+          const service: Service = this.services[i];
+          service.getCharacteristic(this.platform.Characteristic.On).updateValue(on);
+        }
       })
-      .catch((err: Error) => {
-        this.platform.log.error(this.accessory.context.device.displayName, `Error retrieving socket ${index} status.`);
-        callback(err, undefined);
-
+      .catch(error => {
+        this.platform.log.error(this.accessory.context.device.displayName, error.stack);
       });
-  }
-
-  async getWatts (callback: CharacteristicSetCallback) {
-    interface VarbindType {
-      oid: string;
-      type: any;
-      value: any;
-    }
+    
     const switchOids = [];
     switchOids.push(`${powerOids[this.accessory.context.device.mfgIndex]}`);
     this.snmpGet(switchOids)
       .then((varbinds: VarbindType[]) => {
         const watts = varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex] ? varbinds[0].value * powerMultiples[this.accessory.context.device.mfgIndex] : 0.0001;
-        this.platform.log.info(this.accessory.context.device.displayName, 'Calling getWatts', watts);
-        callback(undefined, watts);
+        this.platform.log.info(this.accessory.context.device.displayName, 'Polling Watts', watts);
+        const service: Service = this.services[this.accessory.context.device.count];
+        service.getCharacteristic(this.platform.Characteristic.CurrentAmbientLightLevel).updateValue(watts)
       })
       .catch((err: Error) => {
         this.platform.log.error(this.accessory.context.device.displayName, 'Error retrieving Watts.');
-        callback(err, undefined);
-
       });
+		this.timer = setTimeout(this.poll.bind(this), this.platform.refreshInterval)
   }
 
 }

@@ -14,6 +14,12 @@
 			"required": false,
 			"default": false
 		},
+		"refreshInterval": {
+			"title": "Refresh Interval",
+			"type": "integer",
+			"required": false,
+			"description": "Specifies the number of minutes between outlet status polls and updates. Default is 15."
+		},
 		"pdus": {
 			"type": "array",
 			"items": {
