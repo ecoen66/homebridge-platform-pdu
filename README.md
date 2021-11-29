@@ -40,7 +40,7 @@ Example platform config (needs to be added to the homebridge config.json):
                 }
                 
             ],
-            "platform": "Raritan Platform PDU"
+            "platform": "Platform PDU"
         }
       	]
  ...
