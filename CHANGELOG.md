@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.10 (2023-11-10)
+
+### Changes
+
+- Updated Node version
+
+## 0.1.9 (2023-11-10)
+
+### Changes
+
+- Updated dependencies
+
 ## 0.1.8 (2021-11-08)
 
 #### Changes
