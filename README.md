@@ -1,3 +1,8 @@
+# THIS CODE IS NO LONGER BEING DEVELOPED/SUPPORTED BY THE AUTHOR
+I have not used homebridge for a few years now, and no longer have a PDUs in use at home.
+
+
+
 # homebridge-platform-pdu
 # Homebridge dynamic Platform Plugin for Raritan and APC PDUs
 A [Raritan](https://www.raritan.com) PX-5475 and [APC](https://www.apc.com) AP7931 PDU plugin for
